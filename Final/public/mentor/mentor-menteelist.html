@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentee List</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Ensure body takes up full height */
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Center the content vertically */
+    .container {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+
+    /* Form container styling */
+    .form-container {
+      display: none; /* Hidden by default */
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    /* Form elements styling */
+    .form-container label,
+    .form-container input,
+    .form-container button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    /* Input fields */
+    .form-container input {
+      border: 1px solid #ccc;
+    }
+
+    /* Buttons */
+    .form-container button {
+      background-color: #ff9e00;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Cancel button style */
+    .form-container button.cancel {
+      background-color: #ccc;
+    }
+
+    /* Table styling */
+    #menteeTable {
+      width: 40%;
+      margin-top: 20px;
+      display: none; /* Hide table initially */
+      border-collapse: collapse;
+    }
+    #menteeTable th, #menteeTable td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    /* Main buttons */
+    .main-buttons button {
+      display: inline-block;
+      padding: 12px 20px;
+      margin: 10px;
+      background-color: #ff9e00;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .main-buttons button:hover {
+      background-color: #ff8c00;
+    }
+
+    /* Cancel button in the form */
+    .form-container button.cancel:hover {
+      background-color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+    <ul>
+      <li><a href="mentor-home.html">Home</a></li>
+      <li><a href="mentor-menteelist.html">Mentee List</a></li>
+      <li><a href="mentor-meeting.html">Meeting</a></li>
+      <li><a href="mentor-task.html">Tasks</a></li>
+      <li><a href="mentor-chatbox.html">Chatbox</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1>Manage Mentees</h1>
+
+    <!-- Main Buttons -->
+    <div class="main-buttons">
+      <button onclick="toggleTableVisibility()">Load Mentees</button>
+      <button onclick="showInsertForm()">Insert Mentee</button>
+      <button onclick="showDeleteForm()">Delete Mentee</button>
+    </div>
+
+    <!-- Table to Display Mentees -->
+    <table border="1" id="menteeTable">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Department</th>
+            </tr>
+        </thead>
+        <tbody id="menteeTableBody">
+            <!-- Mentee data will be injected here -->
+        </tbody>
+    </table>
+
+    <!-- Insert Mentee Form -->
+    <div class="form-container" id="insertForm">
+        <h2>Insert Mentee</h2>
+        <form id="insertMenteeForm">
+            <label for="insertRollNo">Roll No:</label>
+            <input type="text" id="insertRollNo" required><br>
+            <label for="insertName">Name:</label>
+            <input type="text" id="insertName" required><br>
+            <label for="insertDepartment">Department:</label>
+            <input type="text" id="insertDepartment" required><br>
+            <button type="submit">Insert</button>
+        </form>
+        <button class="cancel" onclick="closeForm('insertForm')">Cancel</button>
+    </div>
+
+    <!-- Delete Mentee Form -->
+    <div class="form-container" id="deleteForm">
+        <h2>Delete Mentee</h2>
+        <form id="deleteMenteeForm">
+            <label for="deleteRollNo">Roll No:</label>
+            <input type="text" id="deleteRollNo" required><br>
+            <button type="submit">Delete</button>
+        </form>
+        <button class="cancel" onclick="closeForm('deleteForm')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    © 2025 NEDACA. All Rights Reserved.
+  </div>
+
+  <script>
+    // Toggle the visibility of the Table and Forms
+    function toggleTableVisibility() {
+      const menteeTable = document.getElementById('menteeTable');
+      const insertForm = document.getElementById('insertForm');
+      const deleteForm = document.getElementById('deleteForm');
+
+      if (menteeTable.style.display === 'table') {
+        menteeTable.style.display = 'none';
+        insertForm.style.display = 'none';
+        deleteForm.style.display = 'none';
+      } else {
+        menteeTable.style.display = 'table';
+        insertForm.style.display = 'none';
+        deleteForm.style.display = 'none';
+        
+        loadMentees(); // ✅ ACTUALLY load the mentees from backend
+      }
+    }
+
+    // Show the Insert Form
+    function showInsertForm() {
+      const insertForm = document.getElementById('insertForm');
+      const deleteForm = document.getElementById('deleteForm');
+
+      if (insertForm.style.display === 'none' || insertForm.style.display === '') {
+        insertForm.style.display = 'block';
+        deleteForm.style.display = 'none';
+      } else {
+        insertForm.style.display = 'none';
+      }
+    }
+
+    // Show the Delete Form
+    function showDeleteForm() {
+      const insertForm = document.getElementById('insertForm');
+      const deleteForm = document.getElementById('deleteForm');
+
+      if (deleteForm.style.display === 'none' || deleteForm.style.display === '') {
+        deleteForm.style.display = 'block';
+        insertForm.style.display = 'none';
+      } else {
+        deleteForm.style.display = 'none';
+      }
+    }
+
+    // Close the form
+    function closeForm(formId) {
+      document.getElementById(formId).style.display = 'none';
+    }
+
+    // Handle Insert Mentee Form submission
+    document.getElementById('insertMenteeForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const mentee = {
+        roll_no: document.getElementById('insertRollNo').value,
+        name: document.getElementById('insertName').value,
+        department: document.getElementById('insertDepartment').value
+      };
+
+      fetch('/insert-mentees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mentee)
+      })
+      .then(response => response.text())
+      .then(data => {
+        alert('Mentee inserted successfully');
+        toggleTableVisibility();  // Reload mentees after insertion
+        closeForm('insertForm');  // Close the form after submission
+      })
+      .catch(error => console.error('Error inserting mentee:', error));
+    });
+
+    // Handle Delete Mentee Form submission
+    document.getElementById('deleteMenteeForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const roll_no = document.getElementById('deleteRollNo').value;
+
+      fetch('/delete-mentees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roll_no })
+      })
+      .then(response => response.text())
+      .then(data => {
+        alert('Mentee deleted successfully');
+        toggleTableVisibility();  // Reload mentees after deletion
+        closeForm('deleteForm');  // Close the form after deletion
+      })
+      .catch(error => console.error('Error deleting mentee:', error));
+    });
+
+    // Endpoint to load mentees
+    function loadMentees() {
+      fetch('/load-mentees')
+        .then(response => response.text())
+        .then(data => {
+          const menteeTableBody = document.getElementById('menteeTableBody');
+          menteeTableBody.innerHTML = ''; // Clear existing data
+
+          const menteeList = data.split('\n')
+            .map(row => row.trim())
+            .filter(row => row && row.includes(',') && row.split(',').length === 3);  // ✅ Only rows with 3 comma-separated values
+
+          menteeList.forEach(mentee => {
+            const [roll_no, name, department] = mentee.split(',').map(item => item.trim());
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${roll_no}</td><td>${name}</td><td>${department}</td>`;
+            menteeTableBody.appendChild(row);
+          });
+        })
+        .catch(error => console.error('Error:', error));
+    }
+  </script>
+
+</body>
+</html>

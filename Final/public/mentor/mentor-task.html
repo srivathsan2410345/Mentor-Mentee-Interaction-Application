@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentor Task Assignment</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+   Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+    <ul>
+      <li><a href="mentor-home.html">Home</a></li>
+      <li><a href="mentor-menteelist.html">Mentee List</a></li>
+      <li><a href="mentor-meeting.html">Meeting</a></li>
+      <li><a href="mentor-task.html">Tasks</a></li>
+      <li><a href="mentor-chatbox.html">Chatbox</a></li>
+    </ul>
+  </nav>
+
+  <!-- Task Assignment Section -->
+  <div class="container task-container">
+    <div class="task-card">
+      <h2>Assign Tasks to Mentees</h2>
+
+      <!-- Mentee Selection -->
+      <div class="mentee-selection">
+        <h3>Select a Mentee</h3>
+        <div class="mentee-list" id="menteeList">
+          <!-- Mentee cards generated dynamically (optional later) -->
+        </div>
+      </div>
+
+      <!-- Selected Mentee Information -->
+      <div class="selected-mentee-info" id="selectedMenteeInfo" style="display: none;">
+        <!-- Selected mentee info shown here -->
+      </div>
+
+      <!-- Task Assignment Form -->
+      <div class="task-assignment" id="taskAssignment" style="display: none;">
+        <h3>Assign New Task</h3>
+        <form id="taskForm" method="POST" action="/add-task">
+          <input type="hidden" id="menteeNameField" name="menteeName">
+
+          <div class="form-group">
+            <label for="taskTitle">Task Title</label>
+            <input type="text" class="form-control" id="taskTitle" name="taskTitle" placeholder="Enter task title" required>
+          </div>
+
+          <div class="form-group">
+            <label for="taskDescription">Task Description</label>
+            <textarea class="form-control" id="taskDescription" name="taskDescription" placeholder="Describe the task in detail" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="taskDueDate">Due Date</label>
+            <input type="date" class="form-control" id="taskDueDate" name="taskDueDate" required>
+          </div>
+
+          <div class="form-group">
+            <label for="taskPriority">Priority</label>
+            <select style="min-height: 60px;"  class="form-control" id="taskPriority" name="taskPriority" required>
+              <option value="3">Low</option>
+              <option value="2" selected>Medium</option>
+              <option value="1">High</option>
+            </select>
+          </div>
+
+          <button type="submit" class="assign-btn">Assign Task</button>
+        </form>
+
+        <div style="margin-top: 20px;">
+
+          <form method="POST" action="/clear-tasks" style="display: inline; margin-left: 10px;">
+            <button type="submit" class="assign-btn" style="background-color: #dc3545;">Clear Tasks</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Assigned Tasks -->
+      <div class="assigned-tasks" id="assignedTasks">
+        <!-- Tasks shown here -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    © 2025 NEDACA. All Rights Reserved.
+  </div>
+
+  <script>
+  let selectedMentee = null;
+
+  const menteeListContainer = document.getElementById("menteeList");
+  const selectedMenteeInfo = document.getElementById("selectedMenteeInfo");
+  const taskAssignment = document.getElementById("taskAssignment");
+  const menteeNameField = document.getElementById("menteeNameField");
+
+  function renderMenteeList(mentees) {
+    menteeListContainer.innerHTML = '';
+    mentees.forEach(mentee => {
+      const card = document.createElement('div');
+      card.className = 'mentee-card';
+      card.innerHTML = `<h4>${mentee.name}</h4><p>${mentee.role}</p>`;
+      card.onclick = () => selectMentee(mentee);
+      menteeListContainer.appendChild(card);
+    });
+  }
+
+  function selectMentee(mentee) {
+    selectedMentee = mentee;
+    selectedMenteeInfo.style.display = 'block';
+    taskAssignment.style.display = 'block';
+    selectedMenteeInfo.innerHTML = `
+      <h3>${mentee.name}</h3>
+      <p><strong>Role:</strong> ${mentee.role}</p>
+    `;
+
+    // Update hidden field
+    menteeNameField.value = mentee.name;
+
+    // Update action URLs to include menteeName (GET params or POST bodies)
+    const viewForm = taskAssignment.querySelector('form[action="/current-task"]');
+    if (viewForm) {
+      viewForm.action = `/current-task?menteeName=${encodeURIComponent(mentee.name)}`;
+    }
+
+    const clearForm = taskAssignment.querySelector('form[action="/clear-tasks"]');
+    clearForm.innerHTML += `<input type="hidden" name="menteeName" value="${mentee.name}">`;
+
+    fetchAssignedTasks(mentee.name);
+  }
+
+  function fetchAssignedTasks(menteeName) {
+    fetch(`/list-tasks?menteeName=${encodeURIComponent(menteeName)}`)
+      .then(res => res.json())
+      .then(tasks => {
+        const container = document.getElementById('assignedTasks');
+        container.innerHTML = '<h3>Assigned Tasks</h3>';
+        if (tasks.length === 0) {
+          container.innerHTML += '<p>No tasks assigned yet.</p>';
+          return;
+        }
+        tasks.forEach(task => {
+          if (!task || !task.title || !task.description || !task.dueDate) return; // skip incomplete
+
+          const div = document.createElement('div');
+          div.className = 'task-entry';
+          div.innerHTML = `
+            <strong>${task.title}</strong> (${task.priority})<br>
+            <em>${task.description}</em><br>
+            Due: ${task.dueDate}
+            <form method="POST" action="/remove-task" style="display:inline;">
+              <input type="hidden" name="menteeName" value="${menteeName}">
+              <input type="hidden" name="title" value="${task.title}">
+              <button type="submit" style="margin-left:10px;" class="btn btn-danger btn-xs">Remove</button>
+            </form>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error('Failed to fetch tasks:', err);
+      });
+  }
+
+  function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+
+  return lines
+      .map(line => line.split(',').map(val => val.trim()))
+      .filter(fields => fields.length === 3 && fields.every(f => f)) // Ensure all fields are non-empty
+      .map(([id, name, role]) => ({ id, name, role }));
+  }
+
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/load-mentees')
+      .then(res => res.text())
+      .then(csvText => {
+        console.log(csvText);
+        const mentees = parseCSV(csvText);
+        renderMenteeList(mentees);
+      })
+      .catch(err => console.error('Failed to load mentees:', err));
+
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskDueDate').setAttribute('min', today);
+
+    // Random Quote
+    const quotes = [
+      "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+      "\"The best way to predict the future is to create it.\" — Peter Drucker",
+      "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+      "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+    ];
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    document.getElementById("quoteText").innerText = quotes[randomIndex];
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentorMeet - Chatbox & Tasks</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+    <!-- Top Bar for Email & Suggestions -->
+    <div class="top-bar">
+      Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+    </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+      <ul>
+        <li><a href="mentee-home.html">Home</a></li>
+        <li><a href="mentee-aboutmentor.html">About Mentor</a></li>
+        <li><a href="mentee-aboutmentee.html">About Mentee</a></li>
+        <li><a href="mentee-meeting.html">Mentor Meet</a></li>
+        <li><a href="mentee-chatbox.html">Chatbox</a></li>
+        <li><a href="mentee-tasks.html">Tasks</a></li>
+      </ul>
+  </nav>
+
+  <br>
+  <br>
+  <br>
+    <!-- Tasks Section -->
+    <div class="section-container tasks-container" style="max-width: 600px; margin: auto;">
+        <div class="tasks-header">
+            Pending Tasks: <span id="task-count">0</span>
+        </div>
+        <div class="task-list" id="task-list">
+            <!-- Tasks will be injected here -->
+        </div>
+        <div class="upload-section">
+            <label>Upload Completed Task:</label>
+            <input type="file" id="task-upload">
+            <button onclick="uploadTask()">Upload</button>
+        </div>
+    </div>
+
+    <!-- Motivational Quote -->
+    <div class="quote" id="quoteText"></div>
+
+    <!-- Footer Section -->
+    <div class="footer">
+        © 2025 NEDACA. All Rights Reserved.
+    </div>
+
+    <script>
+
+        const menteeName = localStorage.getItem("menteeName");
+        
+        function uploadTask() {
+            alert("Task uploaded successfully!");
+        }
+
+        async function loadTasks() {
+
+            const taskList = document.getElementById('task-list');
+            const taskCount = document.getElementById('task-count');
+            try {
+                const res = await fetch(`/list-tasks?menteeName=${encodeURIComponent(menteeName)}`);
+                const tasks = await res.json();
+
+                // Filter out empty/invalid tasks
+                const validTasks = tasks.filter(task => task.title && task.title.trim() !== '');
+
+                taskList.innerHTML = '';
+                taskCount.textContent = validTasks.length;
+
+                if (validTasks.length === 0) {
+                    taskList.innerHTML = '<div style="text-align:center;">No tasks available.</div>';
+                    return;
+                }
+
+                validTasks.forEach((task, index) => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'task-item';
+                    taskDiv.style.border = '1px solid #ccc';
+                    taskDiv.style.borderRadius = '10px';
+                    taskDiv.style.padding = '12px';
+                    taskDiv.style.marginBottom = '10px';
+                    taskDiv.style.backgroundColor = '#f9f9f9';
+
+                    taskDiv.innerHTML = `
+                        <div><strong>Mentee:</strong> ${task.mentee}</div>
+                        <div><strong>Title:</strong> ${task.title}</div>
+                        <div><strong>Description:</strong> ${task.description || ''}</div>
+                        <div><strong>Due Date:</strong> ${task.dueDate || ''}</div>
+                        <div><strong>Priority:</strong> ${task.priority || ''}</div>
+                        <div style="margin-top: 10px;">
+                            <button data-title="${task.title}" onclick="removeTask(this)">Done</button>
+                        </div>
+                    `;
+
+                    taskList.appendChild(taskDiv);
+                });
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                taskList.innerHTML = '<div style="color: red; text-align: center;">Error loading tasks. Please try again later.</div>';
+            }
+        }
+
+        function removeTask(btn) {
+            const title = btn.getAttribute('data-title');
+            fetch('/remove-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            }).then(res => res.text())
+            .then(console.log)
+            .then(() => location.reload());
+        }
+
+        
+        
+            // Random Quote
+        const quotes = [
+        "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+        "\"The best way to predict the future is to create it.\" — Peter Drucker",
+        "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+        "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+        ];
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        document.getElementById("quoteText").innerText = quotes[randomIndex];
+
+        window.onload = loadTasks;
+
+    </script>
+</body>
+</html>

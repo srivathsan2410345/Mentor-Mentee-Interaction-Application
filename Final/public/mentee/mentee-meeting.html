@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentor Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+    <!-- Top Bar for Email & Suggestions -->
+    <div class="top-bar">
+      Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+    </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+      <ul>
+        <li><a href="mentee-home.html">Home</a></li>
+        <li><a href="mentee-aboutmentor.html">About Mentor</a></li>
+        <li><a href="mentee-aboutmentee.html">About Mentee</a></li>
+        <li><a href="mentee-meeting.html">Mentor Meet</a></li>
+        <li><a href="mentee-chatbox.html">Chatbox</a></li>
+        <li><a href="mentee-tasks.html">Tasks</a></li>
+      </ul>
+  </nav>
+  
+  <br>
+  <br>
+  <br>
+
+
+<div class="availability-section" style="width: 80%; margin: 30px auto; background-color: #f9f9f9; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+<h2 style="text-align: center; color: #2a5298; font-weight: bold;">📅 Book a Slot</h2>
+<p style="text-align: center; font-size: 16px; margin-bottom: 20px;">Pick a date and a time slot for your meeting.</p>
+    
+    <!-- Form -->
+     
+    <form id="bookingForm" style="max-width: 400px; margin: auto;">
+      <input type="hidden" name="actionType" value="book-meeting">
+      <!-- Name Input -->
+      <div class="form-group">
+        <label for="name">Your Name:</label>
+        <input type="text" name="name" id="name" class="form-control" required>
+      </div>
+      
+      <!-- Date Picker -->
+      <div class="form-group">
+        <label for="day">Choose Date:</label>
+        <input type="date" name="day" id="day" class="form-control" required>
+      </div>
+    
+      <!-- Slot Selection -->
+      <div class="slot-selection">
+        <p>Available Time Slots:</p>
+        <div class="slot-buttons" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+          <button type="button" class="slot-btn" data-slot="A" onclick="selectSlot(this)">4:00 PM - 5:00 PM</button>
+          <button type="button" class="slot-btn" data-slot="B" onclick="selectSlot(this)">5:00 PM - 6:00 PM</button>
+          <button type="button" class="slot-btn" data-slot="C" onclick="selectSlot(this)">6:00 PM - 7:00 PM</button>
+        </div>
+        <input type="hidden" name="slot" id="selectedSlot">
+      </div>
+    
+      <div style="text-align: center;">
+        <button type="submit" class="btn btn-success">Book Meeting</button>
+      </div>
+    </form>
+    
+    <!-- Status Message -->
+    <div id="statusMessage" style="display: none; margin-top: 20px; padding: 10px; border-radius: 5px;"></div>
+    <div id="reminder" style="text-align: center; margin-top: 30px; font-weight: 500;"></div>
+</div>
+
+  <br>
+  <br>
+  <br>
+
+  <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    © 2025 NEDACA. All Rights Reserved.
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script>
+    // Global variables
+    let availableSlots = [];
+    let selectedSlotElement = null;
+    let availableDates = new Set();
+
+    // Function to load available meeting slots
+    function loadAvailableSlots() {
+        fetch('/load-available-meetings')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                availableSlots = data;
+                console.log('Available slots loaded:', availableSlots);
+                
+                // Extract unique available dates
+                availableDates = new Set();
+                availableSlots.forEach(slot => {
+                    const dateStr = `${slot.year}-${slot.month.toString().padStart(2, '0')}-${slot.day.toString().padStart(2, '0')}`;
+                    availableDates.add(dateStr);
+                });
+                
+                // Update date picker constraints
+                updateDatePicker();
+                updateSlotButtons();
+            })
+            .catch(error => {
+                console.error('Error loading available slots:', error);
+                showStatusMessage('Unable to load available slots. Please try again later.', false);
+            });
+    }
+
+    // Function to update date picker to only show available dates
+    function updateDatePicker() {
+        const dateInput = document.getElementById('day');
+        dateInput.innerHTML = ''; // Clear existing options if any
+        
+        // Set min and max dates (optional, adjust as needed)
+        const today = new Date();
+        const nextYear = new Date();
+        nextYear.setFullYear(today.getFullYear() + 1);
+        
+        dateInput.min = today.toISOString().split('T')[0];
+        dateInput.max = nextYear.toISOString().split('T')[0];
+        
+        // Add event listener to prevent selecting unavailable dates
+        dateInput.addEventListener('input', function() {
+            if (!availableDates.has(this.value)) {
+                showStatusMessage('Selected date has no available slots', false);
+                this.value = '';
+                updateSlotButtons();
+            }
+        });
+    }
+
+    // Function to check slot availability
+    function isSlotAvailable(date, slot) {
+        if (!date) return false;
+        const [year, month, day] = date.split('-').map(Number);
+        return availableSlots.some(s => 
+            s.slot === slot && 
+            s.day === day && 
+            s.month === month && 
+            s.year === year
+        );
+    }
+
+    // Function to update slot buttons
+    function updateSlotButtons() {
+        const date = document.getElementById('day').value;
+        const slotButtons = document.querySelectorAll('.slot-btn');
+        
+        slotButtons.forEach(btn => {
+            const slot = btn.getAttribute('data-slot');
+            const available = date && isSlotAvailable(date, slot);
+            
+            btn.disabled = !available;
+            btn.classList.toggle('disabled', !available);
+            
+            // If selected slot becomes unavailable, deselect it
+            if (btn === selectedSlotElement && !available) {
+                btn.classList.remove('active');
+                document.getElementById('selectedSlot').value = '';
+                selectedSlotElement = null;
+            }
+        });
+    }
+
+    // Function to handle slot selection
+    function selectSlot(element) {
+        // Don't allow selection if button is disabled
+        if (element.classList.contains('disabled')) return;
+        
+        // If clicking an already selected slot, deselect it
+        if (element === selectedSlotElement) {
+            element.classList.remove('active');
+            document.getElementById('selectedSlot').value = '';
+            selectedSlotElement = null;
+            return;
+        }
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.slot-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Set the new selection
+        element.classList.add('active');
+        document.getElementById('selectedSlot').value = element.getAttribute('data-slot');
+        selectedSlotElement = element;
+    }
+
+    // Function to handle form submission
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const day = document.getElementById('day').value;
+        const slot = document.getElementById('selectedSlot').value;
+        
+        if (!name || !day) {
+            showStatusMessage('Please fill in your name and select a date', false);
+            return;
+        }
+        
+        if (!slot) {
+            showStatusMessage('Please select a time slot', false);
+            return;
+        }
+        
+        try {
+            // Parse the date for the backend
+            const [year, month, dayOfMonth] = day.split('-').map(Number);
+            
+            const response = await fetch('/book-meeting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    name, 
+                    day: dayOfMonth, 
+                    month, 
+                    year, 
+                    slot 
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Booking failed');
+            }
+            
+            const data = await response.json();
+            showStatusMessage(data.message || 'Booking successful!', true);
+            
+            // Refresh available slots
+            await loadAvailableSlots();
+            
+            // Reset form
+            document.getElementById('bookingForm').reset();
+            document.getElementById('selectedSlot').value = '';
+            if (selectedSlotElement) {
+                selectedSlotElement.classList.remove('active');
+                selectedSlotElement = null;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showStatusMessage(error.message || 'Booking failed. Please try again.', false);
+        }
+    }
+
+    // Function to show status messages
+    function showStatusMessage(message, isSuccess) {
+        const statusElement = document.getElementById('statusMessage');
+        statusElement.textContent = message;
+        statusElement.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+        statusElement.style.color = isSuccess ? '#155724' : '#721c24';
+        statusElement.style.display = 'block';
+        statusElement.style.padding = '10px';
+        statusElement.style.borderRadius = '4px';
+        statusElement.style.marginTop = '20px';
+        statusElement.style.textAlign = 'center';
+        
+        setTimeout(() => {
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAvailableSlots();
+        
+        document.getElementById('day').addEventListener('change', function() {
+            updateSlotButtons();
+            // Clear selection when date changes
+            if (selectedSlotElement) {
+                selectedSlotElement.classList.remove('active');
+                document.getElementById('selectedSlot').value = '';
+                selectedSlotElement = null;
+            }
+        });
+        
+        document.getElementById('bookingForm').addEventListener('submit', handleFormSubmit);
+        
+        // Initialize slot buttons with onclick handlers
+        document.querySelectorAll('.slot-btn').forEach(btn => {
+            btn.onclick = function() { selectSlot(this); };
+        });
+    });
+
+    // Random Quote
+    const quotes = [
+        "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+        "\"The best way to predict the future is to create it.\" — Peter Drucker",
+        "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+        "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+    ];
+    document.getElementById("quoteText").innerText = quotes[Math.floor(Math.random() * quotes.length)];
+</script>
+</body>
+</html>

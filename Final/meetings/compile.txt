@@ -1,0 +1,1 @@
+g++ meetings/loadMeetings.cpp meetings/meetings.cpp -o meetings/loadMeetings

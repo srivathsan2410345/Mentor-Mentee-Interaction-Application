@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEDACA - Sign Up</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<    <div class="login-container">
+        <img src="https://i.ibb.co/60jC6bVY/Screenshot-2025-04-04-015214.png" alt="Nedaca Logo" class="logo">
+        <h2>Register with NEDACA</h2>
+        
+        <form method="POST" action="/register" onsubmit="storeMenteeName()">
+            <input type="hidden" name="userType" id="userTypeInput">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn-login">Register</button>
+        </form>
+
+        <a id="login-link" href="login.html" class="switch-link">Already got an account? Sign in</a>
+
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            const userType = params.get("userType");
+
+            // Set userType in hidden input
+            document.getElementById('userTypeInput').value = userType || '';
+
+            // Dynamically update the register link
+            const registerLink = document.getElementById("login-link");
+            registerLink.href = userType ? `login.html?userType=${userType}` : `login.html`;
+            // Store username as menteeName in localStorage on form submit
+            function storeMenteeName() {
+                const username = document.getElementById("username").value;
+                localStorage.setItem("menteeName", username);
+            }
+        </script>
+    </div>
+</body>
+</html>

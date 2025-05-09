@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentor Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+
+  </style>
+</head>
+<body>
+
+    <!-- Top Bar for Email & Suggestions -->
+    <div class="top-bar">
+      Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+    </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+    <ul>
+      <li><a href="mentor-home.html">Home</a></li>
+      <li><a href="mentor-menteelist.html">Mentee List</a></li>
+      <li><a href="mentor-meeting.html">Meeting</a></li>
+      <li><a href="mentor-task.html">Tasks</a></li>
+      <li><a href="mentor-chatbox.html">Chatbox</a></li>
+    </ul>
+  </nav>
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <h1>Welcome, Mr.Vijaya Bhaskar!</h1>
+    <p id="date"></p>
+    <p id="time"></p>
+  </div>
+
+  <!-- Total Mentees Present -->
+  <div class="mentee-count">
+    <h2>Total Mentees Present</h2>
+    <span id="menteeCount">Loading...</span>
+  </div>
+
+  <!-- About Me Section -->
+  <div class="about-me">
+    <h2>About Me</h2>
+    <p>Hello! I am passionate about helping mentees excel by providing personalized guidance and actionable steps. My approach blends real-world examples with deep technical expertise to ensure that mentees thrive in their respective domains.</p>
+  </div>
+
+  <!-- Mentor Info Section -->
+  <div class="mentor-section">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe7eTGbw9aJbhcZlf1l37GbYVgdD0jVn4MfdLmU3swvXiJvIllX2owLHg&s" alt="Mentor" class="mentor-img">
+    <div class="mentor-info">
+      <h2>Dr. C. Vijaya Bhaskar</h2>
+      <p>Expertise: Communication & Mentoring.</p>
+      <p>How He Helps: Guides mentees by providing constructive feedback and motivating them to achieve goals. Passionate about helping mentees achieve their goals and guiding them through the learning process. Provides personalized mentorship with a focus on real-world applications and career growth.</p>
+      <a style="font-size:18px;" href="https://www.linkedin.com/in/vijaya-bhaskar-c-1296a243?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app">LinkedIn profile</a>
+    </div>
+  </div>
+
+  <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    © 2025 NEDACA. All Rights Reserved.
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script>
+    // Update Time Every Second
+    function updateTime() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeString = `${hours}:${minutes}:${seconds}`;
+      document.getElementById("time").innerText = "⏰ " + timeString;
+    }
+    setInterval(updateTime, 1000);
+
+    // Set Date
+    document.getElementById("date").innerText = "📅 " + new Date().toDateString();
+
+    // Random Quote
+    const quotes = [
+      "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+      "\"The best way to predict the future is to create it.\" — Peter Drucker",
+      "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+      "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+    ];
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    document.getElementById("quoteText").innerText = quotes[randomIndex];
+
+    function updateMenteeCount() {
+      fetch('/load-mentees')
+        .then(response => response.text())
+        .then(data => {
+          const lines = data.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && line.includes(',') && line.split(',').length === 3);
+          document.getElementById('menteeCount').innerText = lines.length;
+        })
+        .catch(error => {
+          console.error('Failed to load mentee count:', error);
+          document.getElementById('menteeCount').innerText = 'N/A';
+        });
+    }
+
+    // Call the function on page load
+    updateMenteeCount();
+
+  </script>
+</body>
+</html>

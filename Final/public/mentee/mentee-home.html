@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nedaca - Mentor Platform</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+    <!-- Top Bar for Email & Suggestions -->
+    <div class="top-bar">
+        Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">NEDACA</div>
+        <ul>
+            <li><a href="mentee-home.html">Home</a></li>
+            <li><a href="mentee-aboutmentor.html">About Mentor</a></li>
+            <li><a href="mentee-aboutmentee.html">About Mentee</a></li>
+            <li><a href="mentee-meeting.html">Mentor Meet</a></li>
+            <li><a href="mentee-chatbox.html">Chatbox</a></li>
+            <li><a href="mentee-tasks.html">Tasks</a></li>
+        </ul>
+    </nav>    
+
+    <!-- Slide Section -->
+    <div class="container">
+        <div id="slide1" class="slide" style="display: flex;">
+            <div>
+                <h1 id="welcome">Welcome to NEDACA</h1>
+                <p>Your pathway to mentorship and growth.</p>
+                <button class="btn" onclick="nextSlide()">Next</button>
+            </div>
+        </div>
+        <div id="slide2" class="slide">
+            <div>
+                <h1>How NEDACA Helps You</h1>
+                <p>✔️ Connect with expert mentors.<br>
+                   ✔️ Set clear goals for mentees.<br>
+                   ✔️ Learn through guided resources.<br>
+                   ✔️ Apply skills with real-time tasks.<br>
+                   ✔️ Celebrate and track progress!</p>
+                <button class="btn" onclick="prevSlide()">Previous</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 Steps of Success Timeline -->
+    <div class="timeline">
+        <div class="step left">
+            <div class="content">
+                <div class="icon">📚</div>
+                <h2>Step 1: Connect with a Mentor</h2>
+                <p>Build a connection with an expert mentor who understands your goals.</p>
+            </div>
+        </div>
+        <div class="step right">
+            <div class="content">
+                <div class="icon">🎯</div>
+                <h2>Step 2: Set Clear Goals</h2>
+                <p>Define your objectives and milestones for growth.</p>
+            </div>
+        </div>
+        <div class="step left">
+            <div class="content">
+                <div class="icon">🔎</div>
+                <h2>Step 3: Learn and Explore</h2>
+                <p>Gain knowledge through guided resources and expert feedback.</p>
+            </div>
+        </div>
+        <div class="step right">
+            <div class="content">
+                <div class="icon">🚀</div>
+                <h2>Step 4: Apply Your Skills</h2>
+                <p>Work on real-time tasks and enhance practical skills.</p>
+            </div>
+        </div>
+        <div class="step left">
+            <div class="content">
+                <div class="icon">🏆</div>
+                <h2>Step 5: Celebrate Success!</h2>
+                <p>Achieve your goals and take pride in your progress.</p>
+            </div>
+        </div>
+    </div>
+
+   <!-- Motivational Quote -->
+   <div class="quote" id="quoteText"></div>
+
+    <!-- Footer Section -->
+    <div class="footer">
+        © 2025 NEDACA. All Rights Reserved.
+    </div>
+
+    <script>
+
+        const menteeName = localStorage.getItem("menteeName");
+        if (menteeName) {
+            console.log(menteeName);
+            document.getElementById("welcome").innerText += `, ${menteeName}`;
+        }
+
+        let currentSlide = 1;
+        showSlide(currentSlide);
+
+        function nextSlide() {
+            currentSlide = 2;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide = 1;
+            showSlide(currentSlide);
+        }
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach(slide => slide.style.display = 'none');
+            document.getElementById('slide' + n).style.display = 'flex';
+        }
+        
+        // Random Quote
+    const quotes = [
+      "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+      "\"The best way to predict the future is to create it.\" — Peter Drucker",
+      "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+      "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+    ];
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    document.getElementById("quoteText").innerText = quotes[randomIndex];
+
+        
+    </script>
+</body>
+</html>

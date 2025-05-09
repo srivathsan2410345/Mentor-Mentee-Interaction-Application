@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentor Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+    <!-- Top Bar for Email & Suggestions -->
+    <div class="top-bar">
+      Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+    </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+    <ul>
+      <li><a href="mentee-home.html">Home</a></li>
+      <li><a href="mentee-aboutmentor.html">About Mentor</a></li>
+      <li><a href="mentee-aboutmentee.html">About Mentee</a></li>
+      <li><a href="mentee-meeting.html">Mentor Meet</a></li>
+      <li><a href="mentee-chatbox.html">Chatbox</a></li>
+      <li><a href="mentee-tasks.html">Tasks</a></li>
+    </ul>
+  </nav>
+
+    <div class="chat-container">
+        <h2>Chatbox</h2>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="chat-input">
+            <input type="text" id="chat-message" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+
+    <div class="footer">
+        © 2025 NEDACA. All Rights Reserved.
+    </div>
+
+    <script>
+        
+      function sendMessage() {
+          var message = document.getElementById("chat-message").value;
+          if (message.trim() === "") return;
+          
+          var chatBox = document.getElementById("chat-box");
+          var newMessage = document.createElement("div");
+          newMessage.classList.add("message", "mentee");
+          newMessage.innerText = "You: " + message;
+          
+          chatBox.appendChild(newMessage);
+          document.getElementById("chat-message").value = "";
+          chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function handleKeyPress(event) {
+          if (event.key === "Enter") {
+              sendMessage();
+          }
+      }
+        
+        // Random Quote
+    const quotes = [
+      "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+      "\"The best way to predict the future is to create it.\" — Peter Drucker",
+      "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+      "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+    ];
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    document.getElementById("quoteText").innerText = quotes[randomIndex];
+        
+    </script>
+</body>
+</html>

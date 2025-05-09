@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEDACA - Mentee Availability</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    Contact us: <a href="mailto:support@nedaca.com" style="color: #ff9e00;">support@nedaca.com</a> | Suggestions: <a href="https://forms.gle/Td57hPSbGPcBStge6" style="color: #ff9e00;">dropsuggestions</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NEDACA</div>
+    <ul>
+      <li><a href="mentor-home.html">Home</a></li>
+      <li><a href="mentor-menteelist.html">Mentee List</a></li>
+      <li><a href="mentor-meeting.html">Meeting</a></li>
+      <li><a href="mentor-task.html">Tasks</a></li>
+      <li><a href="mentor-chatbox.html">Chatbox</a></li>
+    </ul>
+  </nav>
+
+  <!-- Status Message Container -->
+  <div class="status-container">
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <!-- Availability Section -->
+  <div class="container availability-container">
+    <div class="availability-card">
+      <h2>My Weekly Availability</h2>
+
+      <div class="week-selector">
+        <button id="prevWeek">◀</button>
+        <div class="week-display" id="weekDisplay">April 28 - May 2, 2025</div>
+        <button id="nextWeek">▶</button>
+      </div>
+      
+      <br>
+      <form action="/set-availability" method="POST" id="availabilityForm" style="max-width: 400px; margin: auto;">
+        <input type="hidden" name="actionType" value="set-availability">
+      
+        <!-- Date Picker -->
+        <div class="form-group">
+          <label for="day">Choose Date:</label>
+          <input type="date" name="day" id="day" class="form-control" required onchange="checkAvailableSlots()" min="2025-01-01">
+        </div>
+      
+        <!-- Slot Buttons -->
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline-primary" id="slotA" data-slot="A" onclick="toggleSlot(this)">4:00 PM - 5:00 PM</button>
+          <button type="button" class="btn btn-outline-primary" id="slotB" data-slot="B" onclick="toggleSlot(this)">5:00 PM - 6:00 PM</button>
+          <button type="button" class="btn btn-outline-primary" id="slotC" data-slot="C" onclick="toggleSlot(this)">6:00 PM - 7:00 PM</button>
+        </div>
+      
+        <!-- Where hidden inputs go -->
+        <div id="slotInputs"></div>
+      
+        <!-- Submit Button -->
+        <div style="text-align: center; margin-top: 15px;">
+          <button type="submit" class="btn btn-success">Save Availability</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+   <!-- Motivational Quote -->
+  <div class="quote" id="quoteText"></div>
+  <script>
+    // Global variable to store available slots
+    let availableSlots = [];
+    
+    // Add CSS for status messages
+    const style = document.createElement('style');
+    style.textContent = `
+      .status-container {
+        position: fixed;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        width: 80%;
+        max-width: 500px;
+      }
+      .status-message {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        text-align: center;
+        display: none;
+      }
+      .status-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Function to show status messages (replacement for toast)
+    function showStatusMessage(message, isSuccess) {
+    const statusElement = document.getElementById('statusMessage');
+    statusElement.textContent = message;
+    statusElement.style.backgroundColor = isSuccess ? '#d4edda' : '#f8d7da';
+    statusElement.style.color = isSuccess ? '#155724' : '#721c24';
+    statusElement.style.display = 'block';
+    statusElement.style.padding = '10px';
+    statusElement.style.borderRadius = '4px';
+    statusElement.style.marginTop = '20px';
+    statusElement.style.textAlign = 'center';
+    
+    setTimeout(() => {
+        statusElement.style.display = 'none';
+    }, 5000);
+}
+    
+    // Fetch available slots when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchAvailableSlots();
+      
+      // Set default date to today
+      const today = new Date();
+      const dateInput = document.getElementById('day');
+      dateInput.valueAsDate = today;
+      
+      // Check available slots for today
+      checkAvailableSlots();
+      
+      // Form submission with AJAX
+      document.getElementById('availabilityForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitAvailability();
+      });
+    });
+    
+    // Fetch available slots from backend
+    function fetchAvailableSlots() {
+      fetch('/load-meetings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          availableSlots = data;
+          checkAvailableSlots(); // Update UI based on fetched data
+        })
+        .catch(error => {
+          console.error('Error fetching available slots:', error);
+          showStatusMessage('Error loading available slots. Please try again.', false);
+        });
+    }
+    
+    // Check which slots are available for the selected date
+    function checkAvailableSlots() {
+      const dateInput = document.getElementById('day');
+      if (!dateInput.value) return;
+      
+      const selectedDate = new Date(dateInput.value);
+      const day = selectedDate.getDate();
+      const month = selectedDate.getMonth() + 1; // JavaScript months are 0-based
+      const year = selectedDate.getFullYear();
+      
+      // Reset all buttons
+      document.querySelectorAll('[data-slot]').forEach(button => {
+        button.classList.remove('btn-primary', 'btn-disabled');
+        button.classList.add('btn-outline-primary');
+        button.disabled = false;
+      });
+      
+      // Clear hidden inputs
+      document.getElementById('slotInputs').innerHTML = '';
+      
+      // Check which slots are already set as available
+      availableSlots.forEach(slot => {
+        if (slot.day === day && slot.month === month && slot.year === year) {
+          const button = document.getElementById(`slot${slot.slot}`);
+          if (button) {
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-disabled');
+            button.disabled = true;
+            button.title = 'This slot is already set as available';
+          }
+        }
+      });
+    }
+    
+    function toggleSlot(button) {
+      if (button.disabled) return; // Don't toggle if disabled
+      
+      const slot = button.dataset.slot;
+      const container = document.getElementById('slotInputs');
+      const existingInput = container.querySelector(`input[name="slot"][value="${slot}"]`);
+  
+      if (existingInput) {
+        existingInput.remove();
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-outline-primary');
+      } else {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'slot';
+        input.value = slot;
+        container.appendChild(input);
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-primary');
+      }
+    }
+    
+    async function submitAvailability() {
+      const form = document.getElementById('availabilityForm');
+      const formData = new FormData(form);
+      
+      // Check slots
+      const slots = formData.getAll('slot');
+      if (slots.length === 0) {
+        showStatusMessage('Please select at least one time slot', false);
+        return;
+      }
+
+      // Get date in YYYY-MM-DD format
+      const day = formData.get('day');
+
+      try {
+        // Process each slot separately
+        const results = [];
+        for (const slot of slots) {
+          const response = await fetch('/set-availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: null, slot, day }) // Explicitly send null for name
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `Failed to set availability for slot ${slot}`);
+          }
+          results.push(await response.text());
+        }
+
+        showStatusMessage('Availability set for all slots successfully!', true);
+        fetchAvailableSlots();
+        resetSlotButtons();
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showStatusMessage(error.message, false);
+      }
+    }
+
+            
+    function resetSlotButtons() {
+      // Reset all slot buttons to their initial state
+      document.querySelectorAll('[data-slot]').forEach(button => {
+        if (!button.disabled) {
+          button.classList.remove('btn-primary');
+          button.classList.add('btn-outline-primary');
+        }
+      });
+      
+      // Clear hidden inputs
+      document.getElementById('slotInputs').innerHTML = '';
+    }
+    
+    // Week navigation functions
+    document.getElementById('prevWeek').addEventListener('click', function() {
+      navigateWeek(-7);
+    });
+    
+    document.getElementById('nextWeek').addEventListener('click', function() {
+      navigateWeek(7);
+    });
+    
+function navigateWeek(dayOffset) {
+const dateInput = document.getElementById('day');
+const date = new Date(dateInput.value);
+const newDate = new Date(date);
+newDate.setDate(date.getDate() + dayOffset);
+
+// Check if new date is in the past
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+if (newDate < today) {
+showStatusMessage('Cannot select dates in the past', false);
+return;
+}
+
+dateInput.valueAsDate = newDate;
+updateWeekDisplay(newDate);
+checkAvailableSlots();
+}
+    
+    function updateWeekDisplay(date) {
+      const weekStart = new Date(date);
+      // Find Monday of the week
+      const day = date.getDay();
+      weekStart.setDate(date.getDate() - day + (day === 0 ? -6 : 1));
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 4); // Show Monday to Friday
+      
+      const options = { month: 'long', day: 'numeric' };
+      const displayText = `${weekStart.toLocaleDateString('en-US', options)} - ${weekEnd.toLocaleDateString('en-US', options)}, ${weekEnd.getFullYear()}`;
+      
+      document.getElementById('weekDisplay').textContent = displayText;
+    }
+
+    // Initialize week display with today's date
+    updateWeekDisplay(new Date());
+
+        // Random Quote
+      const quotes = [
+        "\"Success is not the key to happiness. Happiness is the key to success.\" — Albert Schweitzer",
+        "\"The best way to predict the future is to create it.\" — Peter Drucker",
+        "\"Strive not to be a success, but rather to be of value.\" — Albert Einstein",
+        "\"Believe you can and you're halfway there.\" — Theodore Roosevelt"
+      ];
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      document.getElementById("quoteText").innerText = quotes[randomIndex];
+  </script>
+      
+
+  <!-- Footer -->
+  <div class="footer">
+    © 2025 NEDACA. All Rights Reserved.
+  </div>
+</body>
